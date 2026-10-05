@@ -1,6 +1,4 @@
-# Explorify – React Native Shopping Companion
-
-**Harish J H R**
+# Explorify – A React Native Shopping Companion 🛒
 
 ![Demo screenshot](file:///c:/Projects/Explorify/images/icon-home.jpg)
 
@@ -50,13 +48,16 @@ src/
 └─ store/               # For shared state
 ```
 ### Data Flow (simplified)
+
 ```mermaid
 flowchart TD
     UI[Screen UI] -->|reads/writes| Context[React Context]
     Context -->|persists| AsyncStorage[AsyncStorage]
-    UI -->|fetches| Service[Razorpay Service]
-    Service -->|calls| RazorpaySDK[react-native‑razorpay]
-    UI -->|requests| API[Mock API (axios)]
+
+    UI -->|calls| Service[Razorpay Service]
+    Service -->|uses| RazorpaySDK[react-native-razorpay]
+
+    UI -->|requests| API[Mock API - axios]
 ```
 
 ---
