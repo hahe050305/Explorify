@@ -133,15 +133,15 @@ git clone https://github.com/your-org/Explorify.git
 cd Explorify
 
 # Install dependencies
-yarn install
+npm install
 
 # Android
 # Make sure Android SDK and an emulator/device are available
-yarn android   # equivalent to `react-native run-android`
+npm run android   # equivalent to `react-native run-android`
 
 # iOS (macOS only)
 # Xcode must be installed
-yarn ios       # equivalent to `react-native run-ios`
+npm run ios       # equivalent to `react-native run-ios`
 ```
 > **Note**: The app uses native modules; therefore the Android/iOS toolchains must be set up according to the React Native CLI documentation.
 
