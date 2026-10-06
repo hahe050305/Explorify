@@ -23,6 +23,7 @@ import { addToCart } from '../store/shopStore';
 import { useGlobalProducts } from '../context/ProductContext';
 
 const { width: SCREEN_W, height: SCREEN_H } = Dimensions.get('window');
+const THUMB_SIZE = Math.min(Math.max(Math.floor((SCREEN_W - 104) / 3), 82), 94);
 
 // ─── Psychology-based cross-category combo templates ─────────────
 const LIFESTYLE_TEMPLATES: Array<{
@@ -300,7 +301,7 @@ const FullScreenComboCard = React.memo(({
             <Text style={styles.comboTitle} numberOfLines={2}>
               {label}
             </Text>
-            <Text style={styles.comboSubtitle} numberOfLines={1}>
+            <Text style={styles.comboSubtitle} numberOfLines={2}>
               {subtitle}
             </Text>
           </View>
@@ -396,12 +397,12 @@ const ComboSection: React.FC = () => {
 
   // Dynamic layout measurement to ensure 100% viewport fit on all devices
   const [containerHeight, setContainerHeight] = useState(
-    Math.max(SCREEN_H * 0.76, 560)
+    Math.max(SCREEN_H * 0.70, 500)
   );
 
   const onLayout = useCallback((e: LayoutChangeEvent) => {
     const { height } = e.nativeEvent.layout;
-    if (height > 300 && Math.abs(height - containerHeight) > 4) {
+    if (height > 300 && Math.abs(height - containerHeight) > 2) {
       setContainerHeight(height);
     }
   }, [containerHeight]);
@@ -503,16 +504,18 @@ const styles = StyleSheet.create({
     width: SCREEN_W,
     justifyContent: 'center',
     alignItems: 'center',
-    paddingHorizontal: 14,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
   },
   cardOuter: {
     width: '100%',
-    height : '80%',
-    justifyContent : 'space-evenly',
+    height: '100%',
+    maxHeight: 630,
+    justifyContent: 'space-between',
     backgroundColor: COLORS.card,
     borderRadius: 22,
-    paddingTop: 0,
-    paddingBottom: 0,
+    paddingTop: 14,
+    paddingBottom: 14,
     paddingHorizontal: 15,
     overflow: 'hidden',
     borderWidth: 1,
@@ -534,14 +537,14 @@ const styles = StyleSheet.create({
     top: 0,
     left: 0,
     right: 0,
-    height: 0,
+    height: 4,
   },
 
   // ── Card Header & Title Group ───────────────────────────────────
   cardHeaderContainer: {
     width: '100%',
-    marginTop: 0,
-    marginBottom : 4,
+    marginTop: 2,
+    marginBottom: 8,
   },
   cardHeaderRow: {
     flexDirection: 'row',
@@ -589,10 +592,10 @@ const styles = StyleSheet.create({
 
   // ── Title Section ───────────────────────────────────────────────
   titleSection: {
-    marginTop: 2,
+    marginTop: 3,
   },
   comboTitle: {
-    fontSize: 19.5,
+    fontSize: 20,
     fontWeight: '800',
     fontFamily: 'Inter-ExtraBold',
     color: '#0F172A',
@@ -601,23 +604,24 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   comboSubtitle: {
-    fontSize: 12,
+    fontSize: 12.5,
     fontFamily: 'Inter-Medium',
     color: '#64748B',
-    marginTop: 2,
+    marginTop: 3,
+    lineHeight: 17,
     textAlign: 'center',
   },
 
   // ── High-Visibility Product Showcase Container ──────────────────
   showcaseBox: {
     backgroundColor: '#F8FAFC',
-    borderRadius: 16,
+    borderRadius: 18,
     borderWidth: 1,
     borderColor: '#E2E8F0',
     paddingHorizontal: 8,
-    paddingTop: 10,
-    paddingBottom: 8,
-    marginBottom: 12,
+    paddingTop: 12,
+    paddingBottom: 10,
+    marginBottom: 8,
     overflow: 'hidden',
   },
   productsRow: {
@@ -633,9 +637,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 2,
   },
   productImageContainer: {
-    width: 78,
-    height: 78,
-    borderRadius: 14,
+    width: THUMB_SIZE,
+    height: THUMB_SIZE,
+    borderRadius: 16,
     backgroundColor: '#FFFFFF',
     borderWidth: 1.5,
     overflow: 'hidden',
@@ -645,11 +649,11 @@ const styles = StyleSheet.create({
       ios: {
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.05,
-        shadowRadius: 4,
+        shadowOpacity: 0.06,
+        shadowRadius: 5,
       },
       android: {
-        elevation: 2,
+        elevation: 2.5,
       },
     }),
   },
@@ -658,34 +662,35 @@ const styles = StyleSheet.create({
     height: '100%',
   },
   productEmoji: {
-    fontSize: 28,
+    fontSize: 32,
   },
   productTitle: {
     width: '100%',
-    fontSize: 9.5,
+    fontSize: 10,
     fontWeight: '600',
     fontFamily: 'Inter-SemiBold',
     color: '#1E293B',
     textAlign: 'center',
-    marginTop: 4,
-    lineHeight: 13,
-    height: 26,
+    marginTop: 6,
+    marginBottom: 2,
+    lineHeight: 14,
+    minHeight: 28,
   },
   productPrice: {
-    fontSize: 11.5,
+    fontSize: 12,
     fontWeight: '700',
     fontFamily: 'Inter-Bold',
     color: '#0F172A',
-    marginTop: 1,
+    marginTop: 2,
   },
   plusSeparator: {
     width: 10,
-    height: 78,
+    height: THUMB_SIZE,
     justifyContent: 'center',
     alignItems: 'center',
   },
   plusSymbol: {
-    fontSize: 14,
+    fontSize: 15,
     fontWeight: '700',
     color: '#94A3B8',
   },
@@ -694,7 +699,7 @@ const styles = StyleSheet.create({
     color: '#94A3B8',
     fontFamily: 'Inter-Medium',
     textAlign: 'center',
-    marginTop: 4,
+    marginTop: 8,
   },
 
   // ── Perks Strip ─────────────────────────────────────────────────
@@ -703,12 +708,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-around',
     backgroundColor: '#F8FAFC',
-    borderRadius: 10,
+    borderRadius: 12,
     borderWidth: 1,
     borderColor: '#EDF2F7',
-    paddingVertical: 6,
+    paddingVertical: 7,
     paddingHorizontal: 8,
-    marginBottom: 12,
+    marginBottom: 8,
   },
   perkItem: {
     flexDirection: 'row',
@@ -738,8 +743,8 @@ const styles = StyleSheet.create({
     backgroundColor: '#F1F5F9',
     borderRadius: 14,
     paddingHorizontal: 14,
-    paddingVertical: 8,
-    marginBottom: 12,
+    paddingVertical: 9,
+    marginBottom: 10,
   },
   priceLeft: {
     justifyContent: 'center',

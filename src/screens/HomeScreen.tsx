@@ -372,7 +372,7 @@ export default function HomeScreen({navigation}: Props) {
       )}
 
 
-      <View style={{ flex: 1 }}>
+      <View style={{ flex: 1, marginBottom: activeTab === 'combo' ? navBarHeight : 0 }}>
         {activeTab === 'combo' ? (
           <ComboSection />
         ) : (
@@ -451,10 +451,8 @@ export default function HomeScreen({navigation}: Props) {
                               <View style={styles.carouselCaptionWrap}>
                                 <View style={{ flex: 1, marginRight: 8, justifyContent: 'center' }}>
                                   <Text style={styles.carouselCategory} numberOfLines={1}>{p.category.toUpperCase()}</Text>
-                                    <Text style={styles.carouselPrice}>₹{p.price.toFixed(2)}</Text>
                                   <Text style={styles.carouselTitle} numberOfLines={1}>{p.name}</Text>
                                   <View style={styles.carouselPriceRow}>
-                                    {/* <Text style={styles.carouselMrp}>${(p.price * 1.35).toFixed(2)}</Text> */}
                                     <Text style={styles.carouselRating}>★ {p.rating ? Number(p.rating).toFixed(1) : (4.3 + (((p.id || 1) % 6) * 0.1)).toFixed(1)}</Text>
                                   </View>
                                 </View>
@@ -612,7 +610,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   cartIconText: {
-    fontSize: 18,
+    fontSize: 25,
   },
   cartCountBadge: {
     position: 'absolute',
@@ -638,7 +636,7 @@ const styles = StyleSheet.create({
   // ── Search Section ────────────────────────
   searchContainer: {
     paddingHorizontal: 4,
-    paddingVertical: 8,
+    paddingVertical: 6,
     backgroundColor: COLORS.card,
     borderBottomWidth: 1,
     borderBottomColor: COLORS.borderLight,
@@ -760,9 +758,9 @@ const styles = StyleSheet.create({
     fontFamily: 'Inter-ExtraBold',
   },
   carouselCaptionWrap: {
-    height: 100,
+    height: 105,
     paddingHorizontal: 12,
-    paddingVertical: 8,
+    paddingVertical: 6,
     flexDirection: 'column',
     alignItems: 'center',
     justifyContent: 'center',
@@ -776,8 +774,9 @@ const styles = StyleSheet.create({
     fontFamily: 'Inter-ExtraBold',
     color: COLORS.accent,
     letterSpacing: 0.5,
-    marginBottom: 2,
+    marginBottom: 8,
     textAlign : 'center',
+    marginTop : 0
   },
   carouselTitle: {
     fontSize: 18,
@@ -787,26 +786,27 @@ const styles = StyleSheet.create({
     color: COLORS.text,
     marginRight: 2,
     textAlign : 'center',
+    paddingTop : 0
   },
   carouselPriceRow: {
     flexDirection: 'row',
     alignItems: 'center',
     marginTop: 3,
     height: 22,
-    justifyContent: 'space-between',
+    justifyContent: 'center',
   },
   carouselPrice: {
     fontSize: 17,
     fontWeight: '700',
     fontFamily: 'Inter-ExtraBold',
     color: COLORS.text,
-    marginLeft: 2,
+    marginLeft: 1,
   },
   carouselMrp: {
     fontSize: 12,
     color: COLORS.muted,
     textDecorationLine: 'line-through',
-    marginRight: 8,
+    marginRight: 10,
     marginTop : 4
   },
   carouselRating: {
@@ -814,7 +814,7 @@ const styles = StyleSheet.create({
     color: COLORS.success,
     fontWeight: '700',
     fontFamily: 'Inter-ExtraBold',
-    marginTop : 0
+    marginTop : 0,
 
   },
   carouselCtaBtn: {

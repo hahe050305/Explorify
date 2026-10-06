@@ -5,11 +5,13 @@
 ---
 
 ## What is Explorify?
+
 Explorify is a **React Native CLI** mobile application that lets users browse a catalog of products, add items to a cart, and complete purchases via **Razorpay**. It showcases core mobile patterns such as navigation, context‑based state management, location awareness, and payment integration.
 
 ---
 
 ## Features
+
 - Product listing with horizontal ad carousel and grid view (HomeScreen).
 - Product detail view with image carousel and add‑to‑wishlist.
 - Cart management and order summary screens.
@@ -23,6 +25,7 @@ Explorify is a **React Native CLI** mobile application that lets users browse 
 ---
 
 ## Screenshots
+
 | Screen | Description |
 | --- | --- |
 | ![HomeScreen](file:///c:/Projects/Explorify/images/icon-home.jpg) | HomeScreen – product carousel and grid layout |
@@ -63,29 +66,39 @@ flowchart TD
 ---
 
 ##  Engineering Decisions
+
 - **React Native CLI** – Provides direct access to native modules (e.g., geolocation, Razorpay) without the abstraction layer of Expo.
 - **TypeScript** – Enforces strict typing across product, cart, and order models, catching shape mismatches at compile time.
+
 - **React Context API** – Chosen over Redux for lightweight global state (auth, location, product, alerts) suitable for a medium‑sized app.
 - **AsyncStorage** – Simple key‑value store used to persist the cart and wishlist across app launches.
+
 - **Axios** – Standard HTTP client; currently used for mock data but ready for real API integration.
 - **Razorpay SDK** – Native payment gateway delivering a secure checkout experience on Android/iOS.
+
 - **@react-native-community/geolocation** – Provides device location for potential location‑based features.
 - **React Navigation (native‑stack)** – Enables smooth native‑style transitions and deep linking.
 
 ---
 
 ##  Technical Challenges
+
 | Problem | Solution | Lesson |
 |---|---|---|
 | **Integrating native Razorpay SDK** – required native module linking and handling asynchronous callbacks. | Wrapped the SDK in `services/razorpayService.ts`, exposed a promise‑based `processPayment` function, and unified success/failure handling via `AlertContext`. | Isolate native bridge code to keep UI components clean and testable. |
+
 | **Managing global state without Redux** – needed a scalable approach for auth, location, and cart. | Implemented four Context providers, each with its own reducer; persisted cart data to AsyncStorage. | Context + reducer offers a lightweight alternative for apps with limited shared state. |
+
 | **Handling permission flow for geolocation** – Android and iOS have different permission models. | Centralised permission request in `LocationContext`, showed user‑friendly alerts on denial, and fallback UI when location is unavailable. | Early permission handling prevents runtime crashes and improves user experience. |
+
 | **Optimising large product lists** – FlatList caused occasional frame drops on low‑end devices. | Used `keyExtractor`, `initialNumToRender`, and `windowSize` tuning; memoised item render via `React.memo`. | Fine‑tuning FlatList parameters yields noticeable UI smoothness. |
+
 | **Preventing duplicate submissions** – Users could tap checkout repeatedly before the payment UI loaded. | Added an `isProcessing` flag in `CartScreen` to disable the button until the promise resolves. | Guarding async actions avoids race conditions and duplicate orders. |
 
 ---
 
 ##  Error Handling
+
 - **Global `AlertContext`** – Centralises error dialogs and toast messages; any component can trigger an alert.
 - **Axios interceptors** – Capture network failures and forward error messages to `AlertContext`.
 - **Duplicate‑action guards** – `isProcessing` flags prevent multiple concurrent payments or API calls.
@@ -95,6 +108,7 @@ flowchart TD
 ---
 
 ##  Performance Optimisations
+
 - Leveraged **FlatList** with `windowSize` and `removeClippedSubviews` for efficient rendering of the product grid.
 - Images are bundled as local assets; no remote fetches during the demo, keeping load times short.
 - Context reducers are pure functions, keeping state updates predictable and fast.
@@ -103,6 +117,7 @@ flowchart TD
 ---
 
 ##  Payment Flow
+
 1. **CartScreen** – User taps **Checkout** button.
 2. `processRazorpayPayment` from `services/razorpayService.ts` creates an order payload and invokes `RazorpayCheckout.open`.
 3. **Success** – Razorpay returns a payment ID; the app navigates to `OrderPlacedScreen` with the ID.
@@ -110,6 +125,7 @@ flowchart TD
 ---
 
 ## Tech Stack
+
 | Technology | Purpose |
 |---|---|
 | React Native CLI (0.87.1) | Native Android/iOS builds |
@@ -127,40 +143,45 @@ flowchart TD
 ---
 
 ##  Getting Started
+
 ```bash
 # Clone the repo
 git clone https://github.com/your-org/Explorify.git
 cd Explorify
 
 # Install dependencies
-yarn install
+npm install
 
 # Android
 # Make sure Android SDK and an emulator/device are available
-yarn android   # equivalent to `react-native run-android`
+npm run android   # equivalent to `react-native run-android`
 
 # iOS (macOS only)
 # Xcode must be installed
-yarn ios       # equivalent to `react-native run-ios`
+npm run ios       # equivalent to `react-native run-ios`
 ```
 > **Note**: The app uses native modules; therefore the Android/iOS toolchains must be set up according to the React Native CLI documentation.
 
 ---
 
 ##  Testing
+
 The repository includes a basic Jest configuration but does **not** contain concrete test files yet. Adding unit and integration tests for context reducers, services, and screen components is a planned next step.
 
 ---
 
 ##  Future Improvements
+
 - Add end‑to‑end tests with Detox for the full checkout flow.
 - Replace mock product data with a real backend API.
 - Implement push notifications for order status updates.
 - Introduce offline‑first sync using Realm or WatermelonDB.
 - Enhance accessibility (ARIA labels, screen‑reader support).
+- Implement a Real-time Order Tracking System
 ---
 
 ##  What I Learned
+
 - Integrating native payment SDKs requires careful asynchronous error handling and UI guards.
 - Context‑based state can replace Redux for midsize apps, reducing boilerplate while keeping the codebase readable.
 - Proper permission handling for location services improves reliability across Android/iOS.
