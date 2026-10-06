@@ -146,7 +146,7 @@ flowchart TD
 
 ```bash
 # Clone the repo
-git clone https://github.com/your-org/Explorify.git
+git clone https://github.com/hahe050305/Explorify.git
 cd Explorify
 
 # Install dependencies
