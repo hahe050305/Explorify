@@ -102,7 +102,7 @@ const ProductCard = React.memo(function ProductCard({
         <Text numberOfLines={2} style={styles.name}>{item.name}</Text>
         <View style={styles.priceContainer}>
           <View style={styles.priceRow}>
-            <Text style={styles.price}>${item.price.toFixed(2)}</Text>
+            <Text style={styles.price}>₹{item.price.toFixed(2)}</Text>
             <Text style={styles.originalPrice}>₹{mrp}</Text>
           </View>
           <Text style={styles.discountTag}>{discountPercent}% OFF</Text>
