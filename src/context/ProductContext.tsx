@@ -60,19 +60,33 @@ export function ProductProvider({ children }: { children: React.ReactNode }) {
 
     try {
       const fetchPromise = (async () => {
-        const resp = await fetch('https://api.escuelajs.co/api/v1/products');
-        if (!resp.ok) throw new Error('Network response was not ok');
-        const data: ApiProduct[] = await resp.json();
+// ---------- DummyJSON Types (top‑level) ----------
+interface DummyJsonProduct {
+  id: number;
+  title: string;
+  price: number;
+  description: string;
+  category: string;
+  thumbnail: string;
+  images?: string[];
+  rating?: number;
+}
 
-        const mapped: Product[] = data.slice(0, 30).map((p, idx) => ({
-          id: p.id,
-          name: (p.title || (p as any).name) ?? 'Untitled',
-          category: typeof p.category === 'string' ? p.category : (p.category?.name || 'General'),
-          price: Number(p.price) || 0,
-          description: p.description || '',
-          image: (p.images && p.images[0]) || p.image || '',
-          rating: Number((4.3 + ((idx % 6) * 0.1)).toFixed(1)),
-        }));
+// Inside refreshProducts(), after fetching JSON:
+const resp = await fetch('https://dummyjson.com/products?limit=100');
+if (!resp.ok) throw new Error('Network response was not ok');
+const { products: rawProducts }: { products: DummyJsonProduct[] } = await resp.json();
+
+// Map DummyJSON fields to our internal Product shape
+const mapped: Product[] = rawProducts.map((p) => ({
+  id: p.id,
+  name: p.title,
+  category: p.category,
+  price: Number(p.price) ?? 0,
+  description: p.description ?? '',
+  image: p.thumbnail ?? (p.images && p.images[0]) ?? '',
+  rating: Number(p.rating?.toFixed(1) ?? 4.3),
+}));
 
         if (mapped.length > 0) {
           setProducts(mapped);
