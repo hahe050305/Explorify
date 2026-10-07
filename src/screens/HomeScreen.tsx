@@ -238,9 +238,15 @@ export default function HomeScreen({navigation}: Props) {
 
   // Featured carousel products
   const carouselProducts = useMemo(() => {
-    if (products.length === 0) return [];
-    return products.slice(0, 7);
-  }, [products]);
+  if (products.length === 0) return [];
+  // Shuffle a copy of the products array (Fisher‑Yates) and take 5 items
+  const shuffled = [...products];
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+  return shuffled.slice(0, 5);
+}, [products]);
 
   // Auto-advance carousel timer with smooth intervals
   useEffect(() => {
