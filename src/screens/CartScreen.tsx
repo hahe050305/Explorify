@@ -206,7 +206,7 @@ export default function CartScreen({navigation}: any) {
               <View style={styles.deliveryPill}>
                 <Text style={styles.deliveryPillIcon}>⚡</Text>
                 <Text style={styles.deliveryPillText}>
-                  {shipping === 0 ? 'Free delivery unlocked on this order!' : 'Add items over $50 for free delivery'}
+                  {shipping === 0 ? 'Free delivery unlocked on this order!' : 'Add items over ₹50 for free delivery'}
                 </Text>
               </View>
             )}
@@ -222,14 +222,14 @@ export default function CartScreen({navigation}: any) {
                 <View style={styles.breakdownRow}>
                   <Text style={styles.breakdownLabel}>Discount on MRP</Text>
                   <Text style={[styles.breakdownValue, {color: COLORS.success}]}>
-                    −${(subtotal * 0.35).toFixed(2)}
+                    −₹{(subtotal * 0.35).toFixed(2)}
                   </Text>
                 </View>
 
                 <View style={styles.breakdownRow}>
                   <Text style={styles.breakdownLabel}>Delivery Fee</Text>
                   <Text style={[styles.breakdownValue, shipping === 0 && {color: COLORS.success}]}>
-                    {shipping === 0 ? 'FREE' : `Rs. ${shipping.toFixed(2)}`}
+                    {shipping === 0 ? 'FREE' : `₹ ${shipping.toFixed(2)}`}
                   </Text>
                 </View>
 
@@ -237,12 +237,12 @@ export default function CartScreen({navigation}: any) {
 
                 <View style={styles.breakdownRow}>
                   <Text style={styles.totalAmountLabel}>Total Amount</Text>
-                  <Text style={styles.totalAmountValue}>${total.toFixed(2)}</Text>
+                  <Text style={styles.totalAmountValue}>₹{total.toFixed(2)}</Text>
                 </View>
 
                 <View style={styles.savingsTag}>
                   <Text style={styles.savingsTagText}>
-                    You will save ${(subtotal * 0.35).toFixed(2)} on this order
+                    You will save ₹{(subtotal * 0.35).toFixed(2)} on this order
                   </Text>
                 </View>
               </View>
