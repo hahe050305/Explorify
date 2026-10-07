@@ -245,3 +245,11 @@ export function useAlert(): AlertContextType {
   }
   return context;
 }
+
+export function showAlert(): AlertContextType {
+  const context = useContext(AlertContext);
+  if (!context) {
+    throw new Error('useAlert must be used within an AlertProvider');
+  }
+  return context;
+}

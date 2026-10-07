@@ -147,23 +147,28 @@ export default function LoginScreen({navigation}: Props) {
     signInAsGuest();
   };
 
-  const handleGoogleSignIn = () => {
-    // TODO: Supabase OAuth — Google
-    showAlert({
-      title: 'Google Sign-In',
-      message: 'Google authentication is coming soon.',
-      type: 'info',
-    });
-  };
+const handleGoogleSignIn = () => {
+  showAlert({
+    title: 'Google Sign-In',
+    message: 'Google authentication is coming soon.',
+    type: 'info',
+  });
+};
 
-  const handleGitHubSignIn = () => {
+const handleGitHubSignIn = () => {
+  showAlert({
+    title: 'GitHub Sign-In',
+    message: 'GitHub authentication is coming soon.',
+    type: 'info',
+  });
+};
     // TODO: Supabase OAuth — GitHub
     showAlert({
       title: 'GitHub Sign-In',
       message: 'GitHub authentication is coming soon.',
       type: 'info',
     });
-  };
+
 
   // ─────────────────────────────────────────────────────
   return (
@@ -449,8 +454,7 @@ export default function LoginScreen({navigation}: Props) {
         </KeyboardAvoidingView>
       </Modal>
     </KeyboardAvoidingView>
-  );
-}
+  )};
 
 const styles = StyleSheet.create({
 
