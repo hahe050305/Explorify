@@ -54,36 +54,43 @@ export default function ProductDetails({route, navigation}: any) {
   const [isDescExpanded, setIsDescExpanded] = useState(false);
 
   // ── Customer Reviews State & Handlers ─────────────────
-  const [reviews, setReviews] = useState([
-    {
-      id: 1,
-      name: 'Alice M.',
-      rating: 5,
-      comment: 'Absolutely love the quality! Fits perfectly and the material is super soft.',
-      isUser: false,
-    },
-    {
-      id: 2,
-      name: 'James R.',
-      rating: 4,
-      comment: 'Great product overall. Delivery was fast and packaging was neat.',
-      isUser: false,
-    },
-    {
-      id: 3,
-      name: 'Sara K.',
-      rating: 3,
-      comment: 'Decent quality but runs a bit small. Would suggest sizing up.',
-      isUser: false,
-    },
-    {
-      id: 4,
-      name: 'Tom H.',
-      rating: 5,
-      comment: 'Exceeded my expectations! Will definitely buy again.',
-      isUser: false,
-    },
-  ]);
+// ── Customer Reviews State ─────────────────
+// Define a Review type matching the UI expectations
+interface Review {
+  id: number;
+  name: string;
+  rating: number;
+  comment: string;
+  isUser: boolean;
+}
+// Start empty; will be populated from API per product
+const [reviews, setReviews] = useState<Review[]>([]);
+
+// Load reviews when the product changes
+useEffect(() => {
+  if (!product?.id) return;
+  const fetchReviews = async () => {
+    try {
+      const resp = await fetch(`https://dummyjson.com/products/${product.id}`);
+      if (!resp.ok) throw new Error('Failed to fetch product reviews');
+      const data = await resp.json();
+      const reviewsArray = (data.reviews ?? []) as Array<{ rating: number; comment: string; reviewerName?: string }>;
+      const mapped: Review[] = reviewsArray.map((r, idx) => ({
+        id: idx + 1,
+        name: r.reviewerName ?? 'Anonymous',
+        rating: r.rating,
+        comment: r.comment,
+        isUser: false,
+      }));
+      setReviews(mapped);
+
+    } catch (e) {
+      console.warn('Review fetch error:', e);
+      // keep empty list on error
+    }
+  };
+  fetchReviews();
+}, [product]);
 
   // ── Top "Write a Review" State ───────────────────────
   const [reviewInput, setReviewInput] = useState('');
@@ -398,7 +405,6 @@ export default function ProductDetails({route, navigation}: any) {
               <Text style={styles.ratingVal}>{displayRating}</Text>
               <Text style={styles.ratingStar}>★</Text>
             </View>
-            <Text style={styles.ratingCount}>2,481 ratings & 319 reviews</Text>
           </View>
 
           {/* Pricing breakdown (Amazon/Flipkart style) */}

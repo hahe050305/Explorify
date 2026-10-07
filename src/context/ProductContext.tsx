@@ -19,6 +19,7 @@ type Product = {
   description: string;
   image: string;
   rating?: number;
+  reviews?: Array<{ id?: number; rating: number; comment: string; reviewerName?: string }>;
 };
 
 type ProductContextType = {
@@ -61,6 +62,7 @@ export function ProductProvider({ children }: { children: React.ReactNode }) {
     try {
       const fetchPromise = (async () => {
 // ---------- DummyJSON Types (top‑level) ----------
+// ---------- DummyJSON Types (top‑level) ----------
 interface DummyJsonProduct {
   id: number;
   title: string;
@@ -70,14 +72,33 @@ interface DummyJsonProduct {
   thumbnail: string;
   images?: string[];
   rating?: number;
+  // New: reviews array embedded in product
+  reviews?: Array<{
+    rating: number;
+    comment: string;
+    reviewerName?: string;
+    // other fields ignored
+  }>;
 }
+
+// Extend internal Product type to include optional reviews
+type Product = {
+  id: number;
+  name: string;
+  category: string;
+  price: number;
+  description: string;
+  image: string;
+  rating?: number;
+  reviews?: Array<{ id?: number; rating: number; comment: string; reviewerName?: string }>;
+};
 
 // Inside refreshProducts(), after fetching JSON:
 const resp = await fetch('https://dummyjson.com/products?limit=100');
 if (!resp.ok) throw new Error('Network response was not ok');
 const { products: rawProducts }: { products: DummyJsonProduct[] } = await resp.json();
 
-// Map DummyJSON fields to our internal Product shape
+// Map DummyJSON fields to our internal Product shape, including reviews
 const mapped: Product[] = rawProducts.map((p) => ({
   id: p.id,
   name: p.title,
@@ -86,6 +107,12 @@ const mapped: Product[] = rawProducts.map((p) => ({
   description: p.description ?? '',
   image: p.thumbnail ?? (p.images && p.images[0]) ?? '',
   rating: Number(p.rating?.toFixed(1) ?? 4.3),
+  reviews: p.reviews?.map((r, idx) => ({
+    id: idx,
+    rating: r.rating,
+    comment: r.comment,
+    reviewerName: r.reviewerName,
+  })),
 }));
 
         if (mapped.length > 0) {
