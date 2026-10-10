@@ -28,6 +28,11 @@ type ProductContextType = {
   loading: boolean;
   refreshProducts: (force?: boolean) => Promise<void>;
   resetProductFetch: () => void;
+  /**
+   * Load a page of products (skip & limit) and append to the current list.
+   * Used for infinite‑scroll pagination.
+   */
+  loadMoreProducts: (page: number, limit: number) => Promise<void>;
 };
 
 const defaultCats = ['All', ...Array.from(new Set(MOCK_PRODUCTS.map(m => m.category)))];
@@ -38,6 +43,7 @@ const ProductContext = createContext<ProductContextType>({
   loading: true,
   refreshProducts: async () => {},
   resetProductFetch: () => {},
+  loadMoreProducts: async (page: number, limit: number) => {},
 });
 
 export function ProductProvider({ children }: { children: React.ReactNode }) {
@@ -135,9 +141,51 @@ const mapped: Product[] = rawProducts.map((p) => ({
 
   
 
+  const loadMoreProducts = useCallback(async (page: number, limit: number) => {
+    // Prevent duplicate loads while already loading
+    if (loading) return;
+    setLoading(true);
+    const skip = page * limit;
+    try {
+      const resp = await fetch(`https://dummyjson.com/products?skip=${skip}&limit=${limit}`);
+      if (!resp.ok) throw new Error('Network error');
+      const { products: rawProducts }: { products: any[] } = await resp.json();
+      const mapped: Product[] = rawProducts.map(p => ({
+        id: p.id,
+        name: p.title,
+        category: p.category,
+        price: Number(p.price) ?? 0,
+        description: p.description ?? '',
+        image: p.thumbnail ?? (p.images && p.images[0]) ?? '',
+        rating: Number(p.rating?.toFixed(1) ?? 4.3),
+        reviews: p.reviews?.map((r: { rating: number; comment: string; reviewerName?: string }, idx: number) => ({
+          id: idx,
+          rating: r.rating,
+          comment: r.comment,
+          reviewerName: r.reviewerName,
+        })),
+      }));
+      setProducts(prev => [...prev, ...mapped]);
+      // Merge new categories
+      const newCats = Array.from(new Set([...categories, ...mapped.map(m => m.category)]));
+      setCategories(['All', ...newCats]);
+    } catch (e) {
+      // ignore errors for pagination
+    } finally {
+      setLoading(false);
+    }
+  }, [loading, categories]);
+
   const value = useMemo(
-    () => ({ products, categories, loading, refreshProducts, resetProductFetch }),
-    [products, categories, loading, refreshProducts, resetProductFetch],
+    () => ({
+      products,
+      categories,
+      loading,
+      refreshProducts,
+      resetProductFetch,
+      loadMoreProducts,
+    }),
+    [products, categories, loading, refreshProducts, resetProductFetch, loadMoreProducts],
   );
 
   return (

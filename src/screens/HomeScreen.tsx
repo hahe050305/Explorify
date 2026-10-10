@@ -14,6 +14,8 @@ import {
   Modal,
   ActivityIndicator,
 } from 'react-native';
+import { RefreshControl } from 'react-native';
+import SortDropdown from '../components/SortDropdown';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import COLORS from '../constants/colors';
 import {useAuth} from '../context/AuthContext';
@@ -222,7 +224,7 @@ export default function HomeScreen({navigation}: Props) {
     requestLocation();
   }, []);
 
-  const { products, categories, loading, refreshProducts } = useGlobalProducts();
+  const { products, categories, loading, refreshProducts, loadMoreProducts } = useGlobalProducts();
 
   useEffect(() => {
     refreshProducts();
@@ -231,11 +233,62 @@ export default function HomeScreen({navigation}: Props) {
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
   const [searchQuery, setSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState<'home' | 'search' | 'combo' | 'cart' | 'profile' | 'wishlist'>('home');
+  const [sortOption, setSortOption] = useState<string>('price_asc');
+  const sortOptions = [
+    { label: 'Price: Low to High', value: 'price_asc' },
+    { label: 'Price: High to Low', value: 'price_desc' },
+    { label: 'Rating: High to Low', value: 'rating_desc' },
+  ];
+  const limit = 20;
   const [wishlistVisible, setWishlistVisible] = useState(false);
-
+  const carouselScrollRef = useRef<FlatList>(null);
   const currentIndexRef = useRef(0);
-  const carouselScrollRef = useRef<any>(null);
 
+
+  const filteredProducts = useMemo(() => {
+    let list = products;
+    if (selectedCategory !== 'All') {
+      list = list.filter(p => p.category.toLowerCase() === selectedCategory.toLowerCase());
+    }
+    const q = searchQuery.trim().toLowerCase();
+    if (q) {
+      list = list.filter(p =>
+        p.name.toLowerCase().includes(q) ||
+        p.category.toLowerCase().includes(q) ||
+        p.description.toLowerCase().includes(q)
+      );
+    }
+    return list;
+  }, [products, selectedCategory, searchQuery]);
+  // Apply sorting after filtering
+  const [page, setPage] = useState<number>(0);
+
+  // Apply sorting after filtering
+  const sortedProducts = useMemo(() => {
+    const list = filteredProducts.slice();
+    switch (sortOption) {
+      case 'price_asc':
+        return list.sort((a, b) => a.price - b.price);
+      case 'price_desc':
+        return list.sort((a, b) => b.price - a.price);
+      case 'rating_desc':
+        return list.sort((a, b) => (b.rating ?? 0) - (a.rating ?? 0));
+      default:
+        return list;
+    }
+  }, [filteredProducts, sortOption]);
+
+  // Reset pagination when filter or sort changes
+  useEffect(() => {
+    setPage(0);
+  }, [selectedCategory, searchQuery, sortOption]);
+
+  // Handler for infinite scroll
+  const handleLoadMore = async () => {
+    const nextPage = page + 1;
+    await loadMoreProducts(nextPage, limit);
+    setPage(nextPage);
+  };
   // Featured carousel products
   const carouselProducts = useMemo(() => {
   if (products.length === 0) return [];
@@ -272,7 +325,7 @@ export default function HomeScreen({navigation}: Props) {
     return () => clearInterval(timer);
   }, [carouselProducts]);
 
-  const filteredProducts = useMemo(() => {
+  const q = useMemo(() => {
     let list = products;
     if (selectedCategory !== 'All') {
       list = list.filter(p => p.category.toLowerCase() === selectedCategory.toLowerCase());
@@ -374,6 +427,7 @@ export default function HomeScreen({navigation}: Props) {
               </TouchableOpacity>
             )}
           </View>
+          <SortDropdown selected={sortOption} onChange={setSortOption} options={sortOptions} />
         </View>
       )}
 
@@ -383,7 +437,8 @@ export default function HomeScreen({navigation}: Props) {
           <ComboSection />
         ) : (
           <FlatList
-            data={filteredProducts}
+            testID="home-flatlist"
+            data={sortedProducts}
             renderItem={renderProduct}
             keyExtractor={i => i.id.toString()}
             numColumns={2}
@@ -395,6 +450,9 @@ export default function HomeScreen({navigation}: Props) {
             windowSize={7}
             updateCellsBatchingPeriod={16}
             removeClippedSubviews={Platform.OS === 'android'}
+            refreshControl={<RefreshControl refreshing={loading} onRefresh={refreshProducts} />}
+            onEndReached={handleLoadMore}
+            onEndReachedThreshold={0.5}
             ListHeaderComponent={
               <>
                 {!searchQuery && carouselProducts.length > 0 && (
