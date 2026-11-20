@@ -222,7 +222,7 @@ export default function HomeScreen({navigation}: Props) {
 
   useEffect(() => {
     requestLocation();
-  }, []);
+  }, [requestLocation]);
 
   const { products, categories, loading, refreshProducts, loadMoreProducts } = useGlobalProducts();
 
@@ -243,6 +243,7 @@ export default function HomeScreen({navigation}: Props) {
   const [wishlistVisible, setWishlistVisible] = useState(false);
   const carouselScrollRef = useRef<FlatList>(null);
   const currentIndexRef = useRef(0);
+  const isFiltered = selectedCategory !== 'All' || searchQuery.trim().length > 0;
 
 
   const filteredProducts = useMemo(() => {
@@ -284,11 +285,13 @@ export default function HomeScreen({navigation}: Props) {
   }, [selectedCategory, searchQuery, sortOption]);
 
   // Handler for infinite scroll
-  const handleLoadMore = async () => {
+  const handleLoadMore = React.useCallback(async () => {
+    if (loading || isFiltered) return;
+
     const nextPage = page + 1;
     await loadMoreProducts(nextPage, limit);
     setPage(nextPage);
-  };
+  }, [isFiltered, loadMoreProducts, loading, page]);
   // Featured carousel products
   const carouselProducts = useMemo(() => {
   if (products.length === 0) return [];
@@ -324,22 +327,6 @@ export default function HomeScreen({navigation}: Props) {
 
     return () => clearInterval(timer);
   }, [carouselProducts]);
-
-  const q = useMemo(() => {
-    let list = products;
-    if (selectedCategory !== 'All') {
-      list = list.filter(p => p.category.toLowerCase() === selectedCategory.toLowerCase());
-    }
-    const q = searchQuery.trim().toLowerCase();
-    if (q) {
-      list = list.filter(p =>
-        p.name.toLowerCase().includes(q) ||
-        p.category.toLowerCase().includes(q) ||
-        p.description.toLowerCase().includes(q)
-      );
-    }
-    return list;
-  }, [products, selectedCategory, searchQuery]);
 
   const cardWidth = useMemo(() => Math.floor((SCREEN_W - 16 * 2 - 12) / 2), []);
 
@@ -398,12 +385,28 @@ export default function HomeScreen({navigation}: Props) {
 
         <View style={styles.headerRight}>
           <TouchableOpacity
-            style={styles.cartHeaderBtn}
+            style={styles.headerIconBtn}
             activeOpacity={0.7}
             delayPressIn={0}
             onPress={() => setWishlistVisible(true)}>
-            <Image source={require('../images/icon-wishlist.jpg')} style={[styles.navIcon, activeTab === 'wishlist' && styles.navIconActive]} />
+            <Image
+              source={require('../images/icon-wishlist.jpg')}
+              style={[styles.headerIcon, activeTab === 'wishlist' && styles.headerIconActive]}
+              resizeMode="contain"
+            />
             <WishlistCountBadge />
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.headerIconBtn, {marginLeft: 10}]}
+            activeOpacity={0.7}
+            delayPressIn={0}
+            onPress={() => navigation.navigate('Cart')}>
+            <Image
+              source={require('../images/icon-cart.jpg')}
+              style={styles.headerIcon}
+              resizeMode="contain"
+            />
+            <CartCountBadge />
           </TouchableOpacity>
         </View>
       </View>
@@ -427,7 +430,6 @@ export default function HomeScreen({navigation}: Props) {
               </TouchableOpacity>
             )}
           </View>
-          <SortDropdown selected={sortOption} onChange={setSortOption} options={sortOptions} />
         </View>
       )}
 
@@ -440,7 +442,7 @@ export default function HomeScreen({navigation}: Props) {
             testID="home-flatlist"
             data={sortedProducts}
             renderItem={renderProduct}
-            keyExtractor={i => i.id.toString()}
+            keyExtractor={(item, index) => `${item.id}-${index}`}
             numColumns={2}
             columnWrapperStyle={styles.columnWrapper}
             contentContainerStyle={[styles.scrollContent, { paddingBottom: navBarHeight + 20 }]}
@@ -451,7 +453,7 @@ export default function HomeScreen({navigation}: Props) {
             updateCellsBatchingPeriod={16}
             removeClippedSubviews={Platform.OS === 'android'}
             refreshControl={<RefreshControl refreshing={loading} onRefresh={refreshProducts} />}
-            onEndReached={handleLoadMore}
+            onEndReached={isFiltered ? undefined : handleLoadMore}
             onEndReachedThreshold={0.5}
             ListHeaderComponent={
               <>
@@ -471,7 +473,7 @@ export default function HomeScreen({navigation}: Props) {
                       initialNumToRender={5}
                       maxToRenderPerBatch={5}
                       windowSize={5}
-                      keyExtractor={p => p.id.toString()}
+                      keyExtractor={(p, index) => `carousel-${p.id}-${index}`}
                       getItemLayout={(_, index) => ({
                         length: carouselItemWidth,
                         offset: carouselItemWidth * index,
@@ -537,11 +539,11 @@ export default function HomeScreen({navigation}: Props) {
                 )}
                 <View style={styles.categoriesSection}>
                   <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.categoriesScroll}>
-                    {categories.map(cat => {
+                    {Array.from(new Set(categories)).map((cat, index) => {
                       const active = selectedCategory.toLowerCase() === cat.toLowerCase();
                       return (
                         <TouchableOpacity
-                          key={cat}
+                          key={`${cat}-${index}`}
                           style={[styles.categoryPill, active && styles.categoryPillActive]}
                           onPress={() => setSelectedCategory(cat)}
                           activeOpacity={0.7}>
@@ -552,10 +554,18 @@ export default function HomeScreen({navigation}: Props) {
                   </ScrollView>
                 </View>
                 <View style={styles.feedHeader}>
-                  <Text style={styles.feedTitle}>
-                    {searchQuery ? `Search Results for "${searchQuery}"` : (selectedCategory === 'All' ? 'Popular Picks' : selectedCategory)}
-                  </Text>
-                  <Text style={styles.feedCount}>{filteredProducts.length} items</Text>
+                  <View style={styles.feedHeaderLeft}>
+                    <Text style={styles.feedTitle}>
+                      {searchQuery ? `Search Results for "${searchQuery}"` : (selectedCategory === 'All' ? 'Popular Picks' : selectedCategory)}
+                    </Text>
+                    <Text style={styles.feedCount}>{filteredProducts.length} items</Text>
+                  </View>
+                  <SortDropdown
+                    selected={sortOption}
+                    onChange={setSortOption}
+                    options={sortOptions}
+                    containerStyle={styles.sortDropdownHeader}
+                  />
                 </View>
               </>
             }
@@ -583,17 +593,17 @@ export default function HomeScreen({navigation}: Props) {
           <Image source={require('../images/icon-home.jpg')} style={[styles.navIcon, activeTab === 'home' && styles.navIconActive]} />
           <Text style={[styles.navTitle, activeTab === 'home' && styles.navTitleActive]}>Home</Text>
         </TouchableOpacity>
+        
         <TouchableOpacity style={styles.navItem} activeOpacity={0.7} delayPressIn={0} onPress={() => { setActiveTab('combo'); setSearchQuery(''); }}>
           <Image source={require('../images/icon-combo.jpg')} style={[styles.navIcon, activeTab === 'combo' && styles.navIconActive]} />
           <Text style={[styles.navTitle, activeTab === 'combo' && styles.navTitleActive]}>Combo</Text>
         </TouchableOpacity>
+
         <TouchableOpacity style={styles.navItem} activeOpacity={0.7} delayPressIn={0} onPress={() => navigation.navigate('Cart')}>
-          <View style={styles.navCartWrap}>
-            <Image source={require('../images/icon-cart.jpg')} style={[styles.navIcon, activeTab === 'cart' && styles.navIconActive]} />
-            <CartCountBadge />
-          </View>
+          <Image source={require('../images/icon-cart.jpg')} style={[styles.navIcon, activeTab === 'cart' && styles.navIconActive]} />
           <Text style={styles.navTitle}>Cart</Text>
         </TouchableOpacity>
+
         <TouchableOpacity style={styles.navItem} activeOpacity={0.7} delayPressIn={0} onPress={() => navigation.navigate('Profile')}>
           <Image source={require('../images/icon-account.jpg')} style={styles.navIcon} />
           <Text style={styles.navTitle}>Account</Text>
@@ -663,15 +673,36 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
   },
-  cartHeaderBtn: {
-    padding: 8,
-    position: 'relative',
-    backgroundColor: COLORS.cardSecondary,
-    borderRadius: 20,
-    width: 40,
-    height: 40,
+  headerIconBtn: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    borderWidth: 1.2,
+    borderColor: COLORS.border,
+    backgroundColor: COLORS.card,
     justifyContent: 'center',
     alignItems: 'center',
+    position: 'relative',
+  },
+  cartHeaderBtn: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    borderWidth: 1.2,
+    borderColor: COLORS.border,
+    backgroundColor: COLORS.card,
+    justifyContent: 'center',
+    alignItems: 'center',
+    position: 'relative',
+  },
+  headerIcon: {
+    width: 25,
+    height: 25,
+    opacity: 0.75,
+    resizeMode: 'contain',
+  },
+  headerIconActive: {
+    opacity: 1,
   },
   cartIconText: {
     fontSize: 25,
@@ -682,7 +713,7 @@ const styles = StyleSheet.create({
     right: -2,
     backgroundColor: COLORS.danger,
     minWidth: 18,
-    height: 18,
+    height: 8,
     borderRadius: 9,
     justifyContent: 'center',
     alignItems: 'center',
@@ -699,7 +730,7 @@ const styles = StyleSheet.create({
 
   // ── Search Section ────────────────────────
   searchContainer: {
-    paddingHorizontal: 4,
+    paddingHorizontal: 12,
     paddingVertical: 6,
     backgroundColor: COLORS.card,
     borderBottomWidth: 1,
@@ -992,16 +1023,24 @@ const styles = StyleSheet.create({
     paddingTop: 14,
     paddingBottom: 8,
   },
+  feedHeaderLeft: {
+    flex: 1,
+    marginRight: 8,
+  },
   feedTitle: {
     fontSize: 17,
     fontWeight: '700',
     fontFamily: 'Inter-Bold',
     color: COLORS.text,
-    //alignItems : 'center',
   },
   feedCount: {
-    fontSize: 17,
+    fontSize: 13,
     color: COLORS.subtext,
+    marginTop: 2,
+  },
+  sortDropdownHeader: {
+    marginVertical: 0,
+    alignSelf: 'center',
   },
 
   // ── Product Grid ──────────────────────────
@@ -1204,6 +1243,14 @@ const styles = StyleSheet.create({
   },
   navCartWrap: {
     position: 'relative',
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    borderWidth: 1.2,
+    borderColor: COLORS.border,
+    backgroundColor: COLORS.cardSecondary,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   navBadge: {
     position: 'absolute',
@@ -1229,18 +1276,20 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 6,
     right: 6,
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    backgroundColor: 'rgba(255,255,255,0.9)',
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    borderWidth: 1.2,
+    borderColor: COLORS.border,
+    backgroundColor: 'rgba(255, 255, 255, 0.95)',
     justifyContent: 'center',
     alignItems: 'center',
     zIndex: 10,
     shadowColor: '#000',
     shadowOffset: {width: 0, height: 1},
-    shadowOpacity: 0.12,
+    shadowOpacity: 0.08,
     shadowRadius: 2,
-    elevation: 3,
+    elevation: 2,
   },
   wishlistHeart: {
     fontSize: 20,
@@ -1251,10 +1300,9 @@ const styles = StyleSheet.create({
     color: '#E53935',
   },
   cardWishlistIcon: {
-    width: 16,
-    height: 16,
-    borderRadius: 3,
-    opacity: 0.5,
+    width: 17,
+    height: 17,
+    opacity: 0.75,
     resizeMode: 'contain',
   },
   cardWishlistIconActive: {

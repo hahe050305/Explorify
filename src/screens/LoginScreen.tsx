@@ -162,12 +162,6 @@ const handleGitHubSignIn = () => {
     type: 'info',
   });
 };
-    // TODO: Supabase OAuth — GitHub
-    showAlert({
-      title: 'GitHub Sign-In',
-      message: 'GitHub authentication is coming soon.',
-      type: 'info',
-    });
 
 
   // ─────────────────────────────────────────────────────

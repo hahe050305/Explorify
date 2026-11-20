@@ -69,6 +69,20 @@ const [reviews, setReviews] = useState<Review[]>([]);
 // Load reviews when the product changes
 useEffect(() => {
   if (!product?.id) return;
+
+    if (product.reviews && product.reviews.length > 0) {
+    setReviews(
+      product.reviews.map((r: any, idx: number) => ({
+        id: idx + 1,
+        name: r.reviewerName ?? 'Anonymous',
+        rating: r.rating,
+        comment: r.comment,
+        isUser: false,
+      }))
+    );
+    return;
+  }
+  
   const fetchReviews = async () => {
     try {
       const resp = await fetch(`https://dummyjson.com/products/${product.id}`);
@@ -339,7 +353,7 @@ useEffect(() => {
             <WishlistCountBadge />
           </TouchableOpacity>
           <TouchableOpacity
-            style={[styles.iconCircle, {marginLeft: 8}]}
+            style={[styles.iconCircle, {marginLeft: 10}]}
             onPress={() => navigation.navigate('Cart')}
             activeOpacity={0.7}
             delayPressIn={0}>
@@ -817,16 +831,17 @@ const styles = StyleSheet.create({
     width: 38,
     height: 38,
     borderRadius: 19,
-    backgroundColor: COLORS.cardSecondary,
+    borderWidth: 1.2,
+    borderColor: COLORS.border,
+    backgroundColor: COLORS.card,
     justifyContent: 'center',
     alignItems: 'center',
     position: 'relative',
   },
   headerIcon: {
-    width: 22,
-    height: 22,
-    borderRadius: 4,
-    opacity: 0.65,
+    width: 20,
+    height: 20,
+    opacity: 0.75,
     resizeMode: 'contain',
   },
   headerIconActive: {

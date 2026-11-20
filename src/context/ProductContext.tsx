@@ -1,16 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { MOCK_PRODUCTS } from '../data/mockProducts';
 
-type ApiProduct = {
-  id: number;
-  title: string;
-  price: number;
-  description: string;
-  category: any;
-  images?: string[];
-  image?: string;
-};
-
 type Product = {
   id: number;
   name: string;
@@ -43,7 +33,7 @@ const ProductContext = createContext<ProductContextType>({
   loading: true,
   refreshProducts: async () => {},
   resetProductFetch: () => {},
-  loadMoreProducts: async (page: number, limit: number) => {},
+  loadMoreProducts: async (_page: number, _limit: number) => {},
 });
 
 export function ProductProvider({ children }: { children: React.ReactNode }) {
@@ -51,6 +41,12 @@ export function ProductProvider({ children }: { children: React.ReactNode }) {
   const [categories, setCategories] = useState<string[]>(defaultCats);
   const [loading, setLoading] = useState<boolean>(true);
   const fetchedRef = useRef(false);
+  const loadingRef = useRef(loading);
+  const loadingMoreRef = useRef(false);
+
+  useEffect(() => {
+    loadingRef.current = loading;
+  }, [loading]);
 
   const resetProductFetch = useCallback(() => {
     fetchedRef.current = false;
@@ -142,9 +138,9 @@ const mapped: Product[] = rawProducts.map((p) => ({
   
 
   const loadMoreProducts = useCallback(async (page: number, limit: number) => {
-    // Prevent duplicate loads while already loading
-    if (loading) return;
-    setLoading(true);
+    // Pagination should not trip the full-screen initial loading UI.
+    if (loadingRef.current || loadingMoreRef.current) return;
+    loadingMoreRef.current = true;
     const skip = page * limit;
     try {
       const resp = await fetch(`https://dummyjson.com/products?skip=${skip}&limit=${limit}`);
@@ -165,16 +161,19 @@ const mapped: Product[] = rawProducts.map((p) => ({
           reviewerName: r.reviewerName,
         })),
       }));
-      setProducts(prev => [...prev, ...mapped]);
-      // Merge new categories
-      const newCats = Array.from(new Set([...categories, ...mapped.map(m => m.category)]));
-      setCategories(['All', ...newCats]);
-    } catch (e) {
+      setProducts(prev => {
+        const existingIds = new Set(prev.map(p => p.id));
+        const uniqueIncoming = mapped.filter(p => !existingIds.has(p.id));
+        return [...prev, ...uniqueIncoming];
+      });
+      // Merge new categories without duplicating 'All'
+      setCategories(prev => Array.from(new Set(['All', ...prev, ...mapped.map(m => m.category)])));
+    } catch {
       // ignore errors for pagination
     } finally {
-      setLoading(false);
+      loadingMoreRef.current = false;
     }
-  }, [loading, categories]);
+  }, []);
 
   const value = useMemo(
     () => ({
